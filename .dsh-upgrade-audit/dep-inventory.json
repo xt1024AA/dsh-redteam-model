@@ -1,0 +1,389 @@
+{
+  ".": {
+    "packageName": "@dsh-external/dsh-redteam-model",
+    "version": "1.1.1",
+    "fileCount": 43,
+    "dshImports": [
+      {
+        "spec": "@deepseek-ai/dsh-client-ui-primitives",
+        "base": "@deepseek-ai/dsh-client-ui-primitives",
+        "declared": "0.1.1-rc.2",
+        "fileCount": 6,
+        "sample": [
+          "src\\client\\AdminPage.tsx",
+          "src\\client\\ConfirmDialog.tsx"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "@deepseek-ai/dsh-settings",
+        "base": "@deepseek-ai/dsh-settings",
+        "declared": "0.1.1-rc.2",
+        "fileCount": 1,
+        "sample": [
+          "src\\conversationViewSettings.ts"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "@deepseek-ai/schemastery",
+        "base": "@deepseek-ai/schemastery",
+        "declared": "^3.18.1",
+        "fileCount": 1,
+        "sample": [
+          "src\\conversationViewSettings.ts"
+        ],
+        "undeclared": false
+      }
+    ],
+    "otherImports": [
+      {
+        "spec": "crypto",
+        "base": "crypto",
+        "declared": null,
+        "fileCount": 1,
+        "sample": [
+          "modes\\av-evasion\\lab\\10-webshell-managers\\antsword\\custom-encoder.js"
+        ],
+        "undeclared": true
+      },
+      {
+        "spec": "esbuild",
+        "base": "esbuild",
+        "declared": "^0.25.0",
+        "fileCount": 1,
+        "sample": [
+          "scripts\\build.mjs"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "react",
+        "base": "react",
+        "declared": "^18.3.1",
+        "fileCount": 6,
+        "sample": [
+          "src\\client\\AdminPage.tsx",
+          "src\\client\\contracts.ts"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "react-test-renderer",
+        "base": "react-test-renderer",
+        "declared": "18.3.1",
+        "fileCount": 1,
+        "sample": [
+          "tests\\client-manager.test.mjs"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "react/jsx-runtime",
+        "base": "react",
+        "declared": "^18.3.1",
+        "fileCount": 1,
+        "sample": [
+          "tests\\client-manager.test.mjs"
+        ],
+        "undeclared": false
+      }
+    ],
+    "undeclaredDsh": 0
+  },
+  "deploy": {
+    "packageName": "dsh-modes-deploy",
+    "version": "1.0.8",
+    "fileCount": 3,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-attack-atlas": {
+    "packageName": "@dsh-external/dsh-attack-atlas",
+    "version": "1.2.1",
+    "fileCount": 1,
+    "dshImports": [
+      {
+        "spec": "@deepseek-ai/dsh-tools",
+        "base": "@deepseek-ai/dsh-tools",
+        "declared": "*",
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-attack-atlas\\test\\run.mjs"
+        ],
+        "undeclared": false
+      }
+    ],
+    "otherImports": [
+      {
+        "spec": ", { capabilities: [\n\t\t{ mode: ",
+        "base": ", { capabilities: [\n\t\t{ mode: ",
+        "declared": null,
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-attack-atlas\\test\\run.mjs"
+        ],
+        "undeclared": true
+      },
+      {
+        "spec": ", { capabilities: ex.capabilities });\n\tassert.equal(imp2.imported.length, 0);\n\tassert.equal(imp2.skipped.length, 1, ",
+        "base": ", { capabilities: ex.capabilities });\n\tassert.equal(imp2.imported.length, 0);\n\tassert.equal(imp2.skipped.length, 1, ",
+        "declared": null,
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-attack-atlas\\test\\run.mjs"
+        ],
+        "undeclared": true
+      },
+      {
+        "spec": ", { capabilities: ex.capabilities.concat([{ mode: ",
+        "base": ", { capabilities: ex.capabilities.concat([{ mode: ",
+        "declared": null,
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-attack-atlas\\test\\run.mjs"
+        ],
+        "undeclared": true
+      },
+      {
+        "spec": ", { methods: [bad, good] });\n\tassert.equal(r.imported.length, 1);\n\tassert.equal(r.skipped.length, 1);\n\tassert.ok(r.skipped[0].reason.includes(",
+        "base": ", { methods: [bad, good] });\n\tassert.equal(r.imported.length, 1);\n\tassert.equal(r.skipped.length, 1);\n\tassert.ok(r.skipped[0].reason.includes(",
+        "declared": null,
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-attack-atlas\\test\\run.mjs"
+        ],
+        "undeclared": true
+      },
+      {
+        "spec": ", { methods: ex.methods.concat([{ mode: ",
+        "base": ", { methods: ex.methods.concat([{ mode: ",
+        "declared": null,
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-attack-atlas\\test\\run.mjs"
+        ],
+        "undeclared": true
+      },
+      {
+        "spec": "@dsh-external/dsh-stage-gate",
+        "base": "@dsh-external/dsh-stage-gate",
+        "declared": null,
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-attack-atlas\\test\\run.mjs"
+        ],
+        "undeclared": true
+      }
+    ],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-auto-advance": {
+    "packageName": "@dsh-external/dsh-auto-advance",
+    "version": "0.3.1",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-campaign-memory": {
+    "packageName": "@dsh-external/dsh-campaign-memory",
+    "version": "1.2.0",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-hunter": {
+    "packageName": "@dsh-external/dsh-hunter",
+    "version": "1.0.0",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-mcp-studio": {
+    "packageName": "@dsh-external/dsh-mcp-studio",
+    "version": "1.0.3",
+    "fileCount": 25,
+    "dshImports": [
+      {
+        "spec": "@deepseek-ai/cordis",
+        "base": "@deepseek-ai/cordis",
+        "declared": "^4.0.1",
+        "fileCount": 2,
+        "sample": [
+          "plugins\\dsh-mcp-studio\\src\\index.ts",
+          "plugins\\dsh-mcp-studio\\tests\\host.test.ts"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "@deepseek-ai/dsh-mcp-client",
+        "base": "@deepseek-ai/dsh-mcp-client",
+        "declared": "^0.1.0-rc.6",
+        "fileCount": 2,
+        "sample": [
+          "plugins\\dsh-mcp-studio\\src\\index.ts",
+          "plugins\\dsh-mcp-studio\\src\\types.ts"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "@deepseek-ai/dsh-settings",
+        "base": "@deepseek-ai/dsh-settings",
+        "declared": "^0.1.0-rc.6",
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-mcp-studio\\src\\index.ts"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "@deepseek-ai/schemastery",
+        "base": "@deepseek-ai/schemastery",
+        "declared": "^3.18.1",
+        "fileCount": 2,
+        "sample": [
+          "plugins\\dsh-mcp-studio\\src\\index.ts",
+          "plugins\\dsh-mcp-studio\\src\\types.ts"
+        ],
+        "undeclared": false
+      }
+    ],
+    "otherImports": [
+      {
+        "spec": "esbuild",
+        "base": "esbuild",
+        "declared": "^0.25.0",
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-mcp-studio\\scripts\\build.mjs"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "react",
+        "base": "react",
+        "declared": "^18.3.1",
+        "fileCount": 4,
+        "sample": [
+          "plugins\\dsh-mcp-studio\\src\\client\\components.tsx",
+          "plugins\\dsh-mcp-studio\\src\\client\\contracts.ts"
+        ],
+        "undeclared": false
+      },
+      {
+        "spec": "typescript",
+        "base": "typescript",
+        "declared": "^5.9.0",
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-mcp-studio\\scripts\\build.mjs"
+        ],
+        "undeclared": false
+      }
+    ],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-product-subagents": {
+    "packageName": "@dsh-external/dsh-product-subagents",
+    "version": "1.1.0",
+    "fileCount": 2,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-redteam-results": {
+    "packageName": "@dsh-external/dsh-redteam-results",
+    "version": "1.0.1",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [
+      {
+        "spec": "@dsh-external/dsh-attack-atlas/store",
+        "base": "@dsh-external/dsh-attack-atlas",
+        "declared": null,
+        "fileCount": 1,
+        "sample": [
+          "plugins\\dsh-redteam-results\\test\\run.mjs"
+        ],
+        "undeclared": true
+      }
+    ],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-refusal-guard": {
+    "packageName": "@dsh-external/dsh-refusal-guard",
+    "version": "1.0.0",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-route-boost": {
+    "packageName": "@dsh-external/dsh-route-boost",
+    "version": "1.3.1",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-scanner-tools": {
+    "packageName": "@dsh-external/dsh-scanner-tools",
+    "version": "1.0.0",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-sec-enforce": {
+    "packageName": "@dsh-external/dsh-sec-enforce",
+    "version": "1.4.2",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-semgrep-audit": {
+    "packageName": "@dsh-external/dsh-semgrep-audit",
+    "version": "1.0.0",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-session-pulse": {
+    "packageName": "@dsh-external/dsh-session-pulse",
+    "version": "0.1.0",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-stage-gate": {
+    "packageName": "@dsh-external/dsh-stage-gate",
+    "version": "1.5.0",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-trace-vault": {
+    "packageName": "@dsh-external/dsh-trace-vault",
+    "version": "0.3.0",
+    "fileCount": 1,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  },
+  "plugins\\dsh-webshell-mgr": {
+    "packageName": "@dsh-external/dsh-webshell-mgr",
+    "version": "1.0.0",
+    "fileCount": 2,
+    "dshImports": [],
+    "otherImports": [],
+    "undeclaredDsh": 0
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+*.tar.gz
+.DS_Store
+.zcode/
+*.log
+
+# README screenshot assets (several MB of PNGs, not shipped in the npm tarball)
+功能展示/
+
