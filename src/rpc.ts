@@ -231,7 +231,7 @@ function fetchHandlerFor(endpoint: string, queue: OperationQueue) {
 }
 
 export function registerModelRpc(connection: HostConnectionHandle, queue: OperationQueue): void {
-  // Modern Hosts (0.1.2+): exact Fetch routes under /api keep the channel alive.
+  // Modern Hosts: exact Fetch routes under /api are the transport.
   if (typeof connection.fetch?.register === 'function') {
     for (const endpoint of ENDPOINTS) {
       connection.fetch.register({
@@ -242,19 +242,18 @@ export function registerModelRpc(connection: HostConnectionHandle, queue: Operat
       })
     }
   }
-  // Legacy Hosts (0.1.1 and older): bare rpc channel. On modern Hosts this
-  // registration silently fails, which is harmless — the Fetch routes above
-  // are the transport there.
-  // Legacy Hosts (0.1.1 and older): bare rpc channel. On modern Hosts this
-  // registration throws ("cannot get property webServer without inject") and
-  // must not escape — the throw also aborts sibling registrations in the
-  // same inject callback, so guard it.
+  // Legacy Hosts (0.1.1 and older): bare rpc channel. On 0.2.0-rc.2
+  // `connection.rpc.handle` takes only `(channel, handler)` and registers its
+  // route through `owner.effect(() => owner.webServer.register(route))`, so it
+  // also needs `webServer` injected on the context that read `connection`
+  // (see src/index.ts). The throw must not escape: it would abort sibling
+  // registrations in the same inject callback.
   try {
     connection.rpc.handle(RPC_CHANNEL, async (endpoint, rawPayload): Promise<RpcResult> => {
       return invokeEndpoint(endpoint, rawPayload, queue)
-    }, { authority: 'loopback' })
+    })
   } catch {
-    // Modern Host: the Fetch routes above are the transport.
+    // Host without a bare-rpc channel: the Fetch routes above are the transport.
   }
 }
 

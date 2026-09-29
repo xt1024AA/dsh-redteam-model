@@ -101,20 +101,34 @@ export interface SettingsSectionComponent {
   (): ReactElement | null
 }
 
+/**
+ * One namespace's client view over the Host configuration mirror, as provided
+ * by `ctx.configForms` in `@deepseek-ai/dsh-client-ui-settings` (0.2.0-rc.2).
+ * This replaces the removed `settingsScope` service.
+ */
+export interface ConfigFormSnapshot<T> {
+  status: 'loading' | 'ready' | 'unavailable'
+  value: T | undefined
+  writable: boolean
+  mode: 'host' | 'memory'
+}
+
+export interface ConfigForm<T> {
+  getSnapshot(): ConfigFormSnapshot<T>
+  subscribe(listener: () => void): () => void
+  set(field: string, value: unknown): Promise<boolean>
+  unset(field: string): Promise<boolean>
+}
+
 export interface ClientContext {
   effect(factory: () => void | (() => void), label?: string): void
   connection: AdminConnectionHandle
-  settingsScope: {
-    bind<T>(spec: { namespace: string; decode?: (section: unknown) => T | undefined }): {
-      getSnapshot(): {
-        status: 'loading' | 'ready' | 'unavailable'
-        value: T | undefined
-        writable: boolean
-        mode: 'host' | 'memory'
-      }
-      subscribe(listener: () => void): () => void
-      set(field: string, value: unknown): Promise<void>
-    }
+  /**
+   * Shared configuration forms. `get(entryId)` takes the Host plugin **entry
+   * id**, which is also the settings namespace — no free-form slug any more.
+   */
+  configForms: {
+    get<T>(entryId: string): ConfigForm<T>
   }
   locale: {
     register(namespace: string, dictionaries: { readonly zh: Record<string, string>; readonly en: Record<string, string> }): () => void

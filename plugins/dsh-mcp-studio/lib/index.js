@@ -1,20 +1,6 @@
 // src/index.ts
 import "@deepseek-ai/schemastery";
-import * as dshSettings from "@deepseek-ai/dsh-settings";
 import * as mcpClient from "@deepseek-ai/dsh-mcp-client";
-
-// 具名 import 在导出被宿主移除时会链接期崩溃，这里按宿主版本选择注册路径：
-// 旧宿主提供顶层 installSettingsSection/settingsNamespace；新宿主将其收纳为
-// settings 服务的 installSection 方法（namespace 校验糖不再单独导出）。
-function installSettingsSection(ctx, ns, schema, entry, hooks) {
-	if (typeof dshSettings.installSettingsSection === "function") {
-		dshSettings.installSettingsSection(ctx, ns, schema, entry, hooks);
-		return;
-	}
-	ctx.inject(["settings"], function (sctx) {
-		sctx.settings.installSection(ctx, ns, schema, entry, hooks);
-	});
-}
 
 // src/types.ts
 import z from "@deepseek-ai/schemastery";
@@ -24,7 +10,7 @@ var ServerEntrySchema = z.object({
   id: z.string().required().pattern(ID_PATTERN),
   enabled: z.boolean().default(true),
   name: z.string().default(""),
-  transport: z.union([z.const("stdio"), z.const("streamable-http"), z.const("sse")]).default("stdio"),
+  transport: z.union([z.const("stdio"), z.const("streamable-http")]).default("stdio"),
   command: z.string().default(""),
   argsLine: z.string().default(""),
   env: z.dict(z.string()),
@@ -97,50 +83,12 @@ function toMcpClientConfig(server) {
       cwd: server.cwd
     };
   }
-  if (server.transport === "sse") {
-    return {
-      ...base,
-      transport: "stdio",
-      command: process.execPath,
-      args: [SSE_BRIDGE_PATH, server.url, JSON.stringify(server.headers ?? {})],
-      env: {},
-      cwd: ""
-    };
-  }
   return {
     ...base,
-    transport: server.transport,
+    transport: "streamable-http",
     url: server.url,
     headers: server.headers
   };
-}
-function validateSection(value) {
-  const names = /* @__PURE__ */ new Set();
-  for (const server of value.servers) {
-    if (!server.enabled) continue;
-    if (names.has(server.name)) {
-      throw new Error(`mcp-studio: two enabled servers share the name "${server.name}" \u2014 server names must be unique`);
-    }
-    if (server.name.trim() === "") {
-      throw new Error(`mcp-studio: an enabled server has no name`);
-    }
-    names.add(server.name);
-    if (server.transport === "stdio" && server.command.trim() === "") {
-      throw new Error(`mcp-studio: stdio server "${server.name}" has no command`);
-    }
-    if (server.transport === "streamable-http" || server.transport === "sse") {
-      if (server.url.trim() === "") throw new Error(`mcp-studio: server "${server.name}" has no url`);
-      let parsed;
-      try {
-        parsed = new URL(server.url);
-      } catch {
-        throw new Error(`mcp-studio: server "${server.name}" url "${server.url}" is not a valid URL`);
-      }
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        throw new Error(`mcp-studio: server "${server.name}" url must use http or https`);
-      }
-    }
-  }
 }
 
 // src/settings-rpc.ts
@@ -195,10 +143,14 @@ function createExecutionRing(max = 200) {
   };
 }
 function asToolsViewHandle(view) {
-  if (typeof view !== "object" || view === null) return void 0;
-  const visible = view.visible;
-  if (!(visible instanceof Map)) return void 0;
-  return view;
+  if (!Array.isArray(view)) return void 0;
+  const visible = /* @__PURE__ */ new Map();
+  for (const schema of view) {
+    if (typeof schema !== "object" || schema === null) continue;
+    const entry = schema;
+    if (typeof entry.name === "string") visible.set(entry.name, { name: entry.name, description: entry.description });
+  }
+  return { visible };
 }
 function createStatusHandler(section, viewOf, tracker, executions) {
   return async () => {
@@ -248,7 +200,7 @@ function createStatusHandler(section, viewOf, tracker, executions) {
   };
 }
 function registerStudioRpc(connection, settings, ns, status, diagnose, clearExecutions) {
-  const dispatch = async (endpoint, rawPayload) => {
+  connection.rpc.handle(STUDIO_CHANNEL, async (endpoint, rawPayload) => {
     if (endpoint === "status") return status();
     if (endpoint === "executions/clear") {
       if (clearExecutions === void 0) return badRequest("execution log unavailable");
@@ -285,45 +237,12 @@ function registerStudioRpc(connection, settings, ns, status, diagnose, clearExec
     } catch (error) {
       return failure(error, ns);
     }
-  };
-  // 新宿主（0.1.2+）的 rpc.handle 注册静默失效：通道改走 /api 下的精确 Fetch
-  // 路由（信封与旧通道一致）；旧宿主回退 rpc.handle 裸通道。
-  if (typeof connection.fetch?.register === "function") {
-    for (const endpoint of ["status", "executions/clear", "diagnose", "settings/get", "settings/mutate"]) {
-      connection.fetch.register({
-        path: `/api${STUDIO_CHANNEL}/${endpoint}`,
-        methods: ["POST"],
-        requestBody: "buffered",
-        fetch: async (request) => {
-          if (request.method !== "POST") return new Response("method not allowed", { status: 405 });
-          const respond = (rpcId, result) => Response.json({ type: "server-response", rpcId, result });
-          let body;
-          try {
-            body = await request.json();
-          } catch {
-            return new Response("body is not JSON", { status: 400 });
-          }
-          const rpcId = typeof body?.rpcId === "string" ? body.rpcId : "invalid-request";
-          if (body?.type !== "client-request" || body?.method !== endpoint) {
-            return respond(rpcId, failure(new Error("invalid client-request envelope"), ns));
-          }
-          return respond(rpcId, await dispatch(endpoint, body.payload));
-        },
-      });
-    }
-  }
-  try {
-    connection.rpc.handle(STUDIO_CHANNEL, dispatch, { authority: "loopback" });
-  } catch {
-    // 新宿主上旧通道注册抛错（webServer 未 inject），Fetch 路由已是正路。
-  }
+  });
 }
 
 // src/diagnose.ts
 import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
 var TIMEOUT_MS = 1e4;
-var SSE_BRIDGE_PATH = fileURLToPath(new URL("./sse-bridge.mjs", import.meta.url));
 function line(obj) {
   return `${JSON.stringify(obj)}
 `;
@@ -364,7 +283,6 @@ function stdioTransport(server) {
   };
 }
 async function httpTransport(server, messages) {
-  if (server.transport === "sse") return await sseTransport(server, messages);
   const url = new URL(server.url);
   const responses = [];
   for (const message of messages) {
@@ -400,87 +318,10 @@ async function httpTransport(server, messages) {
   }
   return responses;
 }
-async function sseTransport(server, messages) {
-  const base = new URL(server.url);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  const pending = messages.filter((message) => message.id !== void 0);
-  const wanted = new Set(pending.map((message) => message.id));
-  const responses = [];
-  let messageUrl = null;
-  let sent = false;
-  let finished = false;
-  const sendAll = async () => {
-    if (sent || messageUrl === null) return;
-    sent = true;
-    for (const message of messages) {
-      const response = await fetch(messageUrl, {
-        method: "POST",
-        headers: { "content-type": "application/json", ...server.headers },
-        body: JSON.stringify(message),
-        signal: controller.signal
-      });
-      if (!(response.status >= 200 && response.status < 300)) {
-        throw new Error(`HTTP ${response.status} ${response.statusText}`);
-      }
-    }
-  };
-  try {
-    const stream = await fetch(base, {
-      headers: { accept: "text/event-stream", ...server.headers },
-      signal: controller.signal
-    });
-    if (!stream.ok) throw new Error(`HTTP ${stream.status} ${stream.statusText}`);
-    const reader = stream.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    while (!finished) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      // SSE 行终止符按规范归一为 \n（服务器可能发 \r\n、\r 或混合）
-      buffer += decoder.decode(chunk.value, { stream: true }).replace(/\r\n|\r/g, "\n");
-      let sep;
-      while ((sep = buffer.indexOf("\n\n")) >= 0) {
-        const frame = buffer.slice(0, sep);
-        buffer = buffer.slice(sep + 2);
-        let event = "message";
-        let data = "";
-        for (const line of frame.split("\n")) {
-          if (line.startsWith("event:")) event = line.slice(6).trim();
-          else if (line.startsWith("data:")) data += (data === "" ? "" : "\n") + line.slice(5).trim();
-        }
-        if (event === "endpoint") {
-          if (data === "") continue;
-          messageUrl = new URL(data, base).toString();
-          await sendAll();
-        } else if (data !== "") {
-          let message;
-          try {
-            message = JSON.parse(data);
-          } catch {
-            continue;
-          }
-          if (message.id !== void 0 && wanted.has(message.id)) {
-            responses.push(message);
-            if (responses.length === pending.length) finished = true;
-          }
-        }
-      }
-    }
-    if (messageUrl === null) throw new Error(`no endpoint event received from ${server.url}`);
-    if (responses.length < pending.length) {
-      throw new Error(`incomplete SSE session: ${responses.length}/${pending.length} responses from ${server.url}`);
-    }
-    return responses;
-  } finally {
-    clearTimeout(timer);
-    controller.abort();
-  }
-}
 async function diagnoseServer(server) {
   const started = Date.now();
   try {
-    if (server.transport === "streamable-http" || server.transport === "sse") {
+    if (server.transport === "streamable-http") {
       const messages = [
         { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "dsh-mcp-studio-diag", version: "0.1.0" } } },
         { jsonrpc: "2.0", method: "notifications/initialized" },
@@ -558,7 +399,7 @@ async function diagnoseServer(server) {
 // src/index.ts
 var name = "dsh-mcp-studio";
 var inject = ["tools"];
-var STUDIO_SETTINGS_NAMESPACE = typeof dshSettings.settingsNamespace === "function" ? dshSettings.settingsNamespace("mcp-studio") : "mcp-studio";
+var STUDIO_SETTINGS_NAMESPACE = "dsh-mcp-studio";
 function signatureOf(server) {
   return JSON.stringify(toMcpClientConfig(server));
 }
@@ -621,15 +462,6 @@ function apply(ctx, config) {
     mounts.clear();
     tracker.states.clear();
   }, "mcp-studio: lifecycle");
-  installSettingsSection(ctx, STUDIO_SETTINGS_NAMESPACE, Config, config, {
-    setSource: (source) => {
-      current = source;
-    },
-    onChange: () => {
-      reconcile();
-    },
-    validate: validateSection
-  });
   const executions = createExecutionRing(200);
   const inflight = /* @__PURE__ */ new Map();
   ctx.effect(() => {
@@ -681,7 +513,7 @@ function apply(ctx, config) {
     const { connection, settings } = web;
     const status = createStatusHandler(
       () => current(),
-      () => ctx.get("tools")?.view(void 0),
+      () => ctx.get("tools")?.schemas(void 0),
       tracker,
       executions
     );

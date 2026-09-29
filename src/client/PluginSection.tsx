@@ -1,5 +1,5 @@
 /** Plugin rows: install state, description, versions, and per-row actions. */
-import { Button, IconCordisPluginOutline14, StateDot } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, IconCordisPluginOutlineRegular, StateDot } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PluginInstallState, PluginStatus, Translate } from './contracts.js'
 import {
   VIEW_FIELD_BY_PLUGIN,
@@ -116,7 +116,7 @@ export function PluginSection({
               const state = plugin.installState
               return (
                 <div key={plugin.name} className="dsh-rtm-plugin-row">
-                <IconCordisPluginOutline14 size={14} />
+                <IconCordisPluginOutlineRegular size={14} />
                 <div className="dsh-rtm-plugin-main">
                   <div className="dsh-rtm-plugin-title-row">
                     <span className="dsh-rtm-plugin-name" title={plugin.name}>{plugin.title}</span>

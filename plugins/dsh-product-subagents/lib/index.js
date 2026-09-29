@@ -217,12 +217,22 @@ class CliSubagentProvider {
 		this.spawnFn = spawnFn;
 	}
 	get name() { return this.providerName; }
-	capabilities = {};
+	// 0.2.0-rc.2 的 SubagentCapabilities 五个字段全必填（都是 boolean）：
+	// 本 provider 一项都不支持，显式写 false 与契约对齐（原 `{}` 缺字段）。
+	capabilities = {
+		agentOptions: false,
+		outputSchema: false,
+		depthLimit: false,
+		toolFilter: false,
+		persona: false
+	};
 	inheritsParentContext = false;
 	async start(request) {
 		const id = randomUUID();
 		const input = normalizePrompt(request.prompt);
-		const cwd = typeof request.cwd === "string" && request.cwd ? request.cwd : process.cwd();
+		// 0.2.0-rc.2 的 SubagentStartRequest 没有 cwd 字段（parent 必填）；
+		// 改取父 agent 的会话工作目录 Agent.session.header.cwd（可选），缺失回落进程 cwd。
+		const cwd = request.parent?.session?.header?.cwd || process.cwd();
 		const env = { ...process.env, ...this.config.env };
 		// Provider-aware 兜底链 hint (persona fallback chain, made loud on errors).
 		const fallbackHint = this.kind === "claude"

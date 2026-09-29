@@ -11,14 +11,16 @@ function rpcFixture() {
   const home = mkdtempSync(path.join(tmpdir(), 'dsh-redteam-rpc-test-'))
   const queue = new OperationQueue()
   let handler
-  let authority
   const fetchRoutes = new Map()
   const connection = {
     rpc: {
-      handle(channel, registered, options) {
+      // 0.2.0-rc.2 signature: `handle(channel, handler)` — the old third
+      // `{ authority }` argument is gone, so nothing may be passed after the
+      // handler. Reading `arguments.length` keeps that pinned.
+      handle(channel, registered) {
         assert.equal(channel, '/dsh-redteam-model')
+        assert.equal(arguments.length, 2)
         handler = registered
-        authority = options.authority
       },
     },
     fetch: {
@@ -35,7 +37,6 @@ function rpcFixture() {
     home,
     queue,
     fetchRoutes,
-    authority: () => authority,
     call(endpoint, payload = {}) {
       return handler(endpoint, payload)
     },
@@ -64,10 +65,10 @@ function rpcFixture() {
   }
 }
 
-test('RPC registers as loopback and rejects unknown input', async () => {
+test('RPC registers the bare channel with the 2-argument handler and rejects unknown input', async () => {
   const fixture = rpcFixture()
   try {
-    assert.equal(fixture.authority(), 'loopback')
+    assert.equal(typeof fixture.call, 'function')
     const unknown = await fixture.call('unknown')
     assert.equal(unknown.ok, false)
     // Failure envelopes must satisfy the host client-connection rpcErrorSchema

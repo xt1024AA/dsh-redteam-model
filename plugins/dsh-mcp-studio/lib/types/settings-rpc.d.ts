@@ -49,9 +49,7 @@ export interface HostSettingsService {
 }
 export interface HostConnectionHandle {
     rpc: {
-        handle(channel: string, handler: (endpoint: string, payload: unknown) => Promise<RpcResult>, options: {
-            authority: 'trusted-host' | 'loopback';
-        }): unknown;
+        handle(channel: string, handler: (endpoint: string, payload: unknown) => Promise<RpcResult>): unknown;
     };
 }
 export interface ExecutionRecord {

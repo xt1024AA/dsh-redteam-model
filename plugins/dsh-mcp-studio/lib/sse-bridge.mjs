@@ -1,6 +1,7 @@
 // sse-bridge.mjs — stdio JSON-RPC（行分帧）<-> MCP SSE 旧协议（GET 流 + POST 消息端点）桥接。
 // 用法：node sse-bridge.mjs <sse-url> [headers-json]
 // 宿主 MCP 客户端按普通 stdio 服务器拉起本进程；进程内维持 SSE 长连接并双向转发。
+// 构建时由 scripts/build.mjs 原样复制到 lib/（本文件即唯一源）。
 const sseUrl = process.argv[2];
 if (!sseUrl) {
   console.error("sse-bridge: missing <sse-url> argument");

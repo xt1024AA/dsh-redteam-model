@@ -11,8 +11,10 @@ import {
   CONVERSATION_VIEW_SETTINGS_NAMESPACE,
   conversationViewWriteApplied,
   ConversationViewSettingsSchema,
+  Config,
   DEFAULT_CONVERSATION_VIEW_SETTINGS,
   effectiveConversationViewSettings,
+  readConversationViewSettings,
   registerConversationViewSettings,
 } from './conversationViewSettings.ts'
 import { deployGlobalAgents, deployModes, dshHome, getStatus, installOne, profileWebDir, reconcileProfileBundles, repairMode, scanModes, scanPlugins, uninstallModes, uninstallOne } from './manager.ts'
@@ -31,18 +33,28 @@ export {
   CONVERSATION_VIEW_SETTINGS_NAMESPACE,
   conversationViewWriteApplied,
   ConversationViewSettingsSchema,
+  Config,
   DEFAULT_CONVERSATION_VIEW_SETTINGS,
   effectiveConversationViewSettings,
+  readConversationViewSettings,
   registerConversationViewSettings,
 }
 
 export const name = 'dsh-redteam-model'
 export const inject = ['connection']
 
-/** Minimal structural face of the Cordis context this plugin needs. */
+/**
+ * Minimal structural face of the Cordis context this plugin needs.
+ *
+ * `ctx.inject(services, callback)` starts the callback as a child plugin and
+ * calls it with `(ctx, config)` — a child Context, not a plain service table.
+ * Service names resolve as Context properties; reading one that was not
+ * injected throws `cannot get property "<name>" without inject`. The return
+ * value is a Fiber (awaitable), which this plugin deliberately discards.
+ */
 export interface HostContext {
-  inject(services: readonly string[], callback: (services: Record<string, unknown>) => void): unknown
-  effect(cleanup: () => void | (() => void), label?: string): unknown
+  inject(services: readonly string[], callback: (ctx: unknown) => void): unknown
+  effect(execute: () => unknown, label?: string): unknown
 }
 
 export function apply(ctx: HostContext): void {
@@ -62,8 +74,12 @@ export function apply(ctx: HostContext): void {
 
   const queue = new OperationQueue(path.join(profileWebDir(), '.dsh-redteam-model-operations.json'))
 
-  ctx.inject(['connection'], (web: Record<string, unknown>) => {
-    const { connection } = web as { connection: HostConnectionHandle }
+  ctx.inject(['connection', 'webServer'], (childCtx: unknown) => {
+    // `connection.rpc.handle` registers its channel through
+    // `owner.effect(() => owner.webServer.register(route))`, so the context
+    // that reads `connection` must also have injected `webServer` — otherwise
+    // that registration throws `cannot get property "webServer" without inject`.
+    const { connection } = childCtx as { connection: HostConnectionHandle }
     registerModelRpc(connection, queue)
   })
 

@@ -42,7 +42,7 @@ export interface HostSettingsService {
 
 export interface HostConnectionHandle {
   rpc: {
-    handle(channel: string, handler: (endpoint: string, payload: unknown) => Promise<RpcResult>, options: { authority: 'trusted-host' | 'loopback' }): unknown
+    handle(channel: string, handler: (endpoint: string, payload: unknown) => Promise<RpcResult>): unknown
   }
 }
 
@@ -149,11 +149,21 @@ export interface MountTracker {
   readonly states: Map<string, { state: 'mounting' | 'mounted' | 'error'; error?: string }>
 }
 
+/**
+ * The published tools surface is `schemas(scope?): ToolSchema[]`; the runtime's
+ * `view()` is private API (absent from the public contract). Normalise the
+ * published return value into the `{ visible: Map }` shape the status
+ * aggregation below has always consumed, keyed by tool name.
+ */
 function asToolsViewHandle(view: unknown): { visible: ReadonlyMap<string, { name: string; description?: unknown }> } | undefined {
-  if (typeof view !== 'object' || view === null) return undefined
-  const visible = (view as { visible?: unknown }).visible
-  if (!(visible instanceof Map)) return undefined
-  return view as { visible: ReadonlyMap<string, { name: string; description?: unknown }> }
+  if (!Array.isArray(view)) return undefined
+  const visible = new Map<string, { name: string; description?: unknown }>()
+  for (const schema of view) {
+    if (typeof schema !== 'object' || schema === null) continue
+    const entry = schema as { name?: unknown; description?: unknown }
+    if (typeof entry.name === 'string') visible.set(entry.name, { name: entry.name, description: entry.description })
+  }
+  return { visible }
 }
 
 /** Build the status getter: per enabled server, aggregate its `mcp__<name>__*` tools out of the registry view. */
@@ -255,7 +265,7 @@ export function registerStudioRpc(
     } catch (error) {
       return failure(error, ns)
     }
-  }, { authority: 'loopback' })
+  })
 }
 
 export type { ServerEntry }

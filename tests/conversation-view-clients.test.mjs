@@ -43,9 +43,11 @@ function harness(bundle, field, needsSessions) {
       assert.equal(needsSessions, services.includes('sessions'))
       return callback({ sessions: {} })
     },
-    settingsScope: {
-      bind(spec) {
-        assert.equal(spec.namespace, 'redteam-manager-ui')
+    // 0.2.0-rc.2 replaced the client `settingsScope` service with `configForms`.
+    // `get()` takes the Host plugin entry id, which is now also the namespace.
+    configForms: {
+      get(entryId) {
+        assert.equal(entryId, 'dsh-redteam-model')
         return {
           getSnapshot: () => snapshot,
           subscribe(listener) {
@@ -53,6 +55,7 @@ function harness(bundle, field, needsSessions) {
             listeners.add(listener)
             return () => listeners.delete(listener)
           },
+          set: () => Promise.resolve(true),
         }
       },
     },
@@ -91,7 +94,7 @@ function harness(bundle, field, needsSessions) {
 for (const [file, packageId, slotId, field, needsSessions] of CASES) {
   test(`${slotId} owns an idempotent fail-open visibility lifecycle`, () => {
     const bundle = loadBundle(file, packageId)
-    assert.deepEqual(Array.from(bundle.inject), ['slots', 'settingsScope'])
+    assert.deepEqual(Array.from(bundle.inject), ['slots', 'configForms'])
     const view = harness(bundle, field, needsSessions)
     assert.deepEqual(view.lifecycle.slice(0, 2), ['subscribe', 'register'])
     assert.deepEqual(view.registered, [slotId])

@@ -18,7 +18,7 @@
   },
   "peerDependencies": {
     "@deepseek-ai/dsh-tools": "*",
-    "@deepseek-ai/dsh-agent-presets": "*"
+    "@deepseek-ai/dsh-agent-preset-registry": "0.2.0-rc.2"
   },
   "license": "MIT",
   "dsh": {

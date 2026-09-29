@@ -73,7 +73,7 @@
 
 ### 方式一：设置页管理台（推荐）
 
-把整个合集作为一个 dsh 插件安装（需 dsh web 0.1.0-rc.6+，验证于 0.1.1-rc.2）：
+把整个合集作为一个 dsh 插件安装（需 DSH 0.2.0-rc.2+，验证于 0.2.0-rc.2）：
 
 ```sh
 dsh plugin --profile web add github:SeaOf0/dsh-redteam-model

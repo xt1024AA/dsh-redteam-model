@@ -60,13 +60,13 @@ const primitives = {
   StateDot() {
     return React.createElement('span')
   },
-  IconAgentPresetOutline16() {
+  IconAgentPresetOutlineRegular() {
     return React.createElement('span')
   },
-  IconCordisPluginOutline14() {
+  IconCordisPluginOutlineRegular() {
     return React.createElement('span')
   },
-  IconRefreshOutline16() {
+  IconRefreshOutlineRegular() {
     return React.createElement('span')
   },
 }
@@ -119,9 +119,11 @@ async function renderManager(initialSnapshot, status = STATUS) {
         },
       },
     },
-    settingsScope: {
-      bind(spec) {
-        assert.equal(spec.namespace, 'redteam-manager-ui')
+    // 0.2.0-rc.2 replaced the client `settingsScope` service with `configForms`;
+    // `get()` takes the Host plugin entry id (which is also the namespace).
+    configForms: {
+      get(entryId) {
+        assert.equal(entryId, 'dsh-redteam-model')
         return {
           getSnapshot: () => snapshot,
           subscribe(listener) {
@@ -130,6 +132,7 @@ async function renderManager(initialSnapshot, status = STATUS) {
           },
           async set(field, value) {
             setCalls.push({ field, value })
+            return true
           },
         }
       },

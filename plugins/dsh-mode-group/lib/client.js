@@ -271,16 +271,14 @@ function apply(ctx) {
 					: Object.values(state.byId).find(function (x) { return x.blank && ((x.retainedBy && x.retainedBy.mainView) ?? 0) > 0; });
 				return s === undefined ? undefined : { id: s.id, blank: s.blank, agentPreset: s.agentPreset };
 			} catch { return undefined; }
-		}, function (sessionId, agentPreset) {
-			try { scope.sessions.noteAgentPreset(sessionId, agentPreset); } catch { /* 列表不在时静默 */ }
 		});
+		// 0.2.0-rc.2 的 client `sessions` 服务面已无 noteAgentPreset（宿主全量 0 命中），
+		// 原先的写回回调只会抛错并被吞掉；不再传 onApplied，选中态仍随 list 快照与 staged 走。
 		addStop(scope.sessions.list.subscribe(function () {
 			if (!active) return;
 			try { ctl.applyStaged(); } catch { /* 失活窗口静默 */ }
 		}));
-		addStop(scope.remote.$on("agent-preset/selected", function (sessionId, agentPreset) {
-			try { scope.sessions.noteAgentPreset(sessionId, agentPreset); } catch { /* 同上 */ }
-		}));
+		// 同上：agent-preset/selected 原先只用于 noteAgentPreset 写回，已随该 API 一并移除。
 		scope.slots.inject("conversation.hero.agentPreset", function () {
 			var make = function (priority) {
 				return scope.slots.register({ name: "conversation.hero.agentPreset", priority: priority }, function () {

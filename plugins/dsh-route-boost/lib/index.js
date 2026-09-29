@@ -113,7 +113,11 @@ function latestUserTracker(ctx, store) {
 		const text = textOf(event.data);
 		if (text) record(sessionIdOf(subject), text);
 	});
-	ctx.on("agent/disposed", (agent) => store.delete(agent.id));
+	// 0.2.0-rc.2：agent/disposed 的首参是 payload（{ agent }），不是 agent 本身。
+	ctx.on("agent/disposed", (payload) => {
+		const agent = payload?.agent;
+		if (agent) store.delete(agent.id);
+	});
 }
 
 function textOf(message) {

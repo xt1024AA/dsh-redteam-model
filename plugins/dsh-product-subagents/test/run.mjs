@@ -34,7 +34,14 @@ const fakeSpawn = (script) => (bin, args, opts) => {
 	const names = providers.map((p) => p.name);
 	ok("providers named claude-code and codex", names.includes("claude-code") && names.includes("codex"));
 	ok("no structured capabilities (registry rejects such requests upstream)",
-		providers.every((p) => Object.keys(p.capabilities).length === 0));
+		// 0.2.0-rc.2 types every SubagentCapabilities field as required, so the
+		// provider advertises the same all-false shape the Host itself uses
+		// (`NO_START_CAPABILITIES`). The host reads them with
+		// `!provider.capabilities[cap]`, so this is behaviourally what an empty
+		// object meant before — only the declared shape is now explicit.
+		providers.every((p) =>
+			["agentOptions", "outputSchema", "depthLimit", "toolFilter", "persona"]
+				.every((cap) => p.capabilities[cap] === false)));
 	ok("inheritsParentContext=false (fresh CLI context)",
 		providers.every((p) => p.inheritsParentContext === false));
 }

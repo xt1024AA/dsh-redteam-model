@@ -1322,10 +1322,13 @@ function WebshellView(props) {
 		h(ConnForm, { open: formOpen[0], editing: editing[0], onClose: function () { formOpen[1](false); }, onSaved: function (c) { formOpen[1](false); refresh(); selected[1](c.id); } }));
 }
 
-var REDTEAM_MANAGER_UI_NAMESPACE = "redteam-manager-ui";
+// 0.2.0-rc.2：settings 命名空间不再是自由 slug，必须等于 Loader 条目 id。
+// 这五个开关是根插件自己的 Config（见根 cordis.patch.yml 的 id: dsh-redteam-model），
+// 因此按该条目 id 取表单；旧宿主没有 configForms 服务，插件整体不装配。
+var REDTEAM_MANAGER_UI_NAMESPACE = "dsh-redteam-model";
 
 function injectVisibleConversationView(ctx, field, register) {
-	var settings = ctx.settingsScope.bind({ namespace: REDTEAM_MANAGER_UI_NAMESPACE });
+	var settings = ctx.configForms.get(REDTEAM_MANAGER_UI_NAMESPACE);
 	ctx.slots.inject("conversation.view", function () {
 		var disposeView;
 		function isVisible() {
@@ -1368,5 +1371,5 @@ function apply(ctx) {
 	});
 }
 
-module.exports = { name: "dsh-webshell-mgr-client", inject: ["slots", "settingsScope"], apply: apply };
+module.exports = { name: "dsh-webshell-mgr-client", inject: ["slots", "configForms"], apply: apply };
 return module.exports; } });

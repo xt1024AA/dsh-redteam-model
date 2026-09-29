@@ -7,3 +7,6 @@ node_modules/
 # README screenshot assets (several MB of PNGs, not shipped in the npm tarball)
 功能展示/
 
+# Local upgrade scratch: downloaded DSH contract tarballs, staging, audit notes
+.dsh-upgrade-audit/
+

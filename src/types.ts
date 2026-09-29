@@ -75,21 +75,27 @@ export type RpcResult =
   | { ok: true; value: unknown }
   | { ok: false; error: { code: 'internal'; message: string; details: Record<string, unknown> } }
 
-/** Minimal face of the host `connection` service used by this plugin. */
+/**
+ * Minimal face of the host `connection` service used by this plugin.
+ *
+ * Mirrors `HostConnectionHandle` as published by
+ * `@deepseek-ai/dsh-client-connection@0.2.0-rc.2`: `rpc.handle` takes only
+ * `(channel, handler)` — the old third `{ authority }` argument is gone — and
+ * `fetch.register` accepts `requestBody: 'buffered' | 'streaming'`.
+ */
 export interface HostConnectionHandle {
   rpc: {
     handle(
       channel: string,
       handler: (endpoint: string, payload: unknown) => Promise<RpcResult>,
-      options: { authority: 'trusted-host' | 'loopback' },
     ): unknown
   }
-  /** Exact Fetch routes under /api (Host 0.1.2+); absent on legacy Hosts. */
+  /** Exact Fetch routes under /api; absent on legacy Hosts. */
   fetch?: {
     register(route: {
       path: string
       methods: string[]
-      requestBody: 'buffered' | 'streamed'
+      requestBody: 'buffered' | 'streaming'
       fetch: (request: Request) => Promise<Response>
     }): unknown
   }

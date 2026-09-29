@@ -1,6 +1,6 @@
 /** Security mode rows: status dot, expandable link path, deploy/repair actions. */
 import { useCallback, useState } from 'react'
-import { Button, DisclosureRow, IconAgentPresetOutline16, StateDot } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, DisclosureRow, IconAgentPresetOutlineRegular, StateDot } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ModeLinkState, ModeStatus, Translate } from './contracts.js'
 
 function modeDot(state: ModeLinkState): 'done' | 'warning' | 'error' {
@@ -90,7 +90,7 @@ export function ModeSection({
             return (
               <DisclosureRow
                 key={mode.id}
-                icon={<IconAgentPresetOutline16 size={14} />}
+                icon={<IconAgentPresetOutlineRegular size={14} />}
                 title={mode.name}
                 open={openIds.has(mode.id)}
                 expandable

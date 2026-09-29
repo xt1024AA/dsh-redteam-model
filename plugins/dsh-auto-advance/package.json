@@ -17,7 +17,7 @@
 		"./package.json": "./package.json"
 	},
 	"peerDependencies": {
-		"@deepseek-ai/dsh-agent-presets": "*"
+		"@deepseek-ai/dsh-agent-preset-registry": "0.2.0-rc.2"
 	},
 	"license": "MIT",
 	"author": "SeaOf0",

@@ -34,19 +34,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import z from "@deepseek-ai/schemastery";
-import * as dshSettings from "@deepseek-ai/dsh-settings";
-
-// 具名 import 在导出被宿主移除时会链接期崩溃，这里按宿主版本选择注册路径：
-// 旧宿主提供顶层 installSettingsSection；新宿主将其收纳为 settings 服务的 installSection 方法。
-function installSettingsSection(ctx, ns, schema, entry, hooks) {
-	if (typeof dshSettings.installSettingsSection === "function") {
-		dshSettings.installSettingsSection(ctx, ns, schema, entry, hooks);
-		return;
-	}
-	ctx.inject(["settings"], function (sctx) {
-		sctx.settings.installSection(ctx, ns, schema, entry, hooks);
-	});
-}
 
 const name = "dsh-refusal-guard";
 
@@ -280,14 +267,10 @@ const Config = z.object({
 });
 
 async function apply(ctx, config) {
-	// Settings overlay: the cordis.patch entry is the base layer, the
-	// settings namespace resolves on top; no settings service ever mounted
-	// means the composed entry keeps working exactly as patched.
+	// 0.2.0-rc.2 移除了 settings 的 section 注册面（顶层 installSettingsSection 与
+	// settings.installSection 都不存在），运行时叠加层随之取消：配置只取
+	// cordis.patch.yml 的组装值（Config 字段未标 .volatile()，宿主不投影成可写表单）。
 	let configSource = () => config;
-	installSettingsSection(ctx, "dsh-refusal-guard", Config, config, {
-		setSource: (fn) => { configSource = fn; },
-		onChange: () => {}
-	});
 
 	const guards = new Map(); // agent id → guard state
 	// session→agent mapping: remember which agent each session belongs to as
@@ -304,7 +287,10 @@ async function apply(ctx, config) {
 	};
 	ctx.on("agent/created", (payload) => bindAgent(payload?.agent));
 	ctx.on("agent/inbox/inserted", (info) => bindAgent(info?.agent));
-	ctx.on("agent/disposed", (agent) => {
+	// 0.2.0-rc.2：agent/disposed 的首参是 payload（{ agent }），不是 agent 本身。
+	ctx.on("agent/disposed", (payload) => {
+		const agent = payload?.agent;
+		if (!agent) return;
 		guards.delete(agent.id);
 		for (const [sid, aid] of sessionAgent) {
 			if (aid === agent.id) {

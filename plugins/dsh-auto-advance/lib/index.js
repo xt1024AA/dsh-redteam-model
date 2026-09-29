@@ -205,7 +205,10 @@ async function apply(ctx, config) {
 			agent.followup({ id, role: "user", content: [{ type: "text", text: decision.text }], source: { kind: "user" } });
 		} catch { /* 注入失败不重试（下一执行体返回自然再试） */ }
 	});
-	ctx.on("agent/disposed", (agent) => {
+	// 0.2.0-rc.2：agent/disposed 的首参是 payload（{ agent }），不是 agent 本身。
+	ctx.on("agent/disposed", (payload) => {
+		const agent = payload?.agent;
+		if (!agent) return;
 		const sid = agent?.session?.id ?? agent?.id;
 		state.delete(sid);
 		kickoffDone.delete(sid);

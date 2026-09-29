@@ -1,12 +1,10 @@
-/** Host plugin: owns the `mcp-studio` settings namespace, mounts one mcp-client per enabled row (hot-swap on edit, dispose on remove), and serves live status aggregated from the tool registry over the plugin's loopback channel. */
+/** Host plugin: owns the `dsh-mcp-studio` settings namespace, mounts one mcp-client per enabled row (hot-swap on edit, dispose on remove), and serves live status aggregated from the tool registry over the plugin's loopback channel. */
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import * as dshSettings from '@deepseek-ai/dsh-settings'
 import * as mcpClient from '@deepseek-ai/dsh-mcp-client'
 import {
   Config,
   toMcpClientConfig,
-  validateSection,
   type ServerEntry,
   type StudioSection,
 } from './types.ts'
@@ -24,31 +22,13 @@ import { diagnoseServer } from './diagnose.ts'
 export const name = 'dsh-mcp-studio'
 export const inject = ['tools']
 
-/** Settings namespace owned by this plugin (client and Host spell the same value). */
-export const STUDIO_SETTINGS_NAMESPACE: string =
-  typeof (dshSettings as { settingsNamespace?: unknown }).settingsNamespace === 'function'
-    ? (dshSettings as { settingsNamespace: (ns: string) => string }).settingsNamespace('mcp-studio')
-    : 'mcp-studio'
-
-/** Settings-section install hooks handed to the settings seam. */
-interface SectionHooks {
-  setSource: (source: () => StudioSection) => void
-  onChange: () => void
-  validate: (section: unknown) => string[]
-}
-
-// 具名 import 在导出被宿主移除时会链接期崩溃，这里按宿主版本选择注册路径：
-// 旧宿主提供顶层 installSettingsSection/settingsNamespace；新宿主将其收纳为
-// settings 服务的 installSection 方法（namespace 校验糖不再单独导出）。
-function installSettingsSection(ctx: Context, ns: string, schema: unknown, entry: unknown, hooks: SectionHooks): void {
-  if (typeof (dshSettings as { installSettingsSection?: unknown }).installSettingsSection === 'function') {
-    ;(dshSettings as { installSettingsSection: (ctx: Context, ns: string, schema: unknown, entry: unknown, hooks: unknown) => void }).installSettingsSection(ctx, ns, schema, entry, hooks)
-    return
-  }
-  ctx.inject(['settings'], (sctx: { settings: { installSection: (ctx: Context, ns: string, schema: unknown, entry: unknown, hooks: unknown) => void } }) => {
-    sctx.settings.installSection(ctx, ns, schema, entry, hooks)
-  })
-}
+/**
+ * Settings namespace owned by this plugin. Since DSH 0.2.0-rc.2 a namespace is
+ * the profile Loader **entry id**, not a free-form slug, so it must equal the
+ * id declared in this plugin's `cordis.patch.yml` — `describe()` matches on
+ * `entry.options.id` and would never find a bare `mcp-studio`.
+ */
+export const STUDIO_SETTINGS_NAMESPACE = 'dsh-mcp-studio'
 
 /** One mounted mcp-client fiber plus the config signature it was built from. */
 interface Mount {
@@ -56,9 +36,12 @@ interface Mount {
   readonly signature: string
 }
 
-/** Minimal face of the tools registry the status aggregator needs. */
+/**
+ * Minimal face of the tools registry the status aggregator needs. `schemas()`
+ * is the published method; the runtime's `view()` is private API.
+ */
 interface ToolsServiceHandle {
-  view(scope?: unknown): unknown
+  schemas(scope?: unknown): unknown
 }
 
 function signatureOf(server: ServerEntry): string {
@@ -128,16 +111,9 @@ export function apply(ctx: Context, config: StudioSection): void {
     tracker.states.clear()
   }, 'mcp-studio: lifecycle')
 
-  installSettingsSection(ctx, STUDIO_SETTINGS_NAMESPACE, Config as z<StudioSection>, config, {
-    setSource: (source: () => StudioSection) => {
-      current = source
-    },
-    onChange: () => {
-      reconcile()
-    },
-    validate: validateSection,
-  })
-
+  // 0.2.0-rc.2 移除了 settings 的 section 注册面（顶层 installSettingsSection 与
+  // settings.installSection 都不存在）：运行时不再有 setSource/onChange 叠加层，
+  // current() 固定读组装值；写路径仍走 settings/mutate RPC（契约一致）。
   /** Tool-call monitoring over session events, folded into an execution ring served by the status RPC. */
   const executions: ExecutionRing = createExecutionRing(200)
   const inflight = new Map<string, { server: string; tool: string; at: number }>()
@@ -197,7 +173,7 @@ export function apply(ctx: Context, config: StudioSection): void {
     const { connection, settings } = web as { connection: HostConnectionHandle; settings: HostSettingsService }
     const status = createStatusHandler(
       () => current(),
-      () => (ctx.get('tools') as unknown as ToolsServiceHandle | undefined)?.view(undefined),
+      () => (ctx.get('tools') as unknown as ToolsServiceHandle | undefined)?.schemas(undefined),
       tracker,
       executions,
     )
